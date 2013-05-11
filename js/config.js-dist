@@ -1,0 +1,4 @@
+BrowserID_XMPP_Config = {
+  bosh_service: 'https://example.com/http-bind/',
+  certificate_component_jid: 'browserid.example.com'
+}

@@ -12,77 +12,107 @@ process.chdir(path.dirname(__dirname));
 require('../lib/logging-config.js');
 
 const 
-express = require('express'),
+unhtml = require('unhtml'),
+xmpp = require('node-xmpp'),
+stream = require('stream'),
+Deserializer = new require('xmlrpc/lib/deserializer'),
 config = require('../lib/config.js'),
 certify = require('../lib/certify.js'),
 keys = require('../lib/keys');
 
-var server = express.createServer(
-  express.bodyParser()
-);
+var component = new xmpp.Component({
+                  jid: config.get('jid'),
+                  password: config.get('password'),
+                  host: config.get('host'),
+                  port: config.get('port')
+                });
 
-server.post('/cert_key', function(req, res) {
-  // validate optional 'duration' parameter
-  if (!req.body.duration) {
-    req.body.duration = config.get('certificate_validity_ms');
-  } else if (typeof req.body.duration !== 'number') {
-    return res.json({
-      success: false,
-      reason: 'duration argument must be a number when present'
-    }, 400);
-  }
+component.on('online', function() {
+  console.log("Online");
+});
 
-  // validate required 'pubkey' parameter
-  if (typeof req.body.pubkey != 'string') {
-    return res.json({
-      success: false,
-      reason: 'pubkey argument is required and must be a string'
-    }, 400);
-  }
-
-  // validate required 'email' parameter
-  if (typeof req.body.email != 'string') {
-    return res.json({
-      success: false,
-      reason: 'email argument is required and must be a string'
-    }, 400);
-  }
-
-  certify({
-    email: req.body.email,
-    pubkey: req.body.pubkey,
-    duration: req.body.duration,
-    hostname: config.get('issuer_hostname')
-  }, function(err, certificate) {
-    var ro = { };
-    if (err) {
-      ro.success = false;
-      ro.reason = err.toString();
-    } else {
-      ro.success = true;
-      ro.certificate = certificate;
+component.on('stanza', function(stanza) {
+  if (stanza.is('iq') && stanza.attrs.type === 'set') {
+    var q = stanza.getChild('query', 'jabber:iq:rpc');
+    if (!q) {
+      console.err("No RPC query tag");
+      // TODO: error
+      return;
     }
 
-    res.json(ro, ro.success ? 200 : 400);
-  });
-});
+    var methodCall = q.getChild('methodCall');
+    if (!methodCall) {
+      console.err("No methodCall tag");
+      // TODO: error
+      return;
+    }
 
-// Ops
-server.get('/__heartbeat__', function (req, res) { res.send('ok certifier')});
-server.get('/public-key', function (req, res) {
-  keys.pubkey(function (err, publicKey) {
-    res.contentType('application/json');
-    res.send(publicKey.serialize());
-  });
-});
+    var pt = new stream.PassThrough();
+    var deserializer = new Deserializer();
+    deserializer.deserializeMethodCall(pt, function(err, methodName, args) {
+      if (err) {
+        // TODO: error
+        console.err(err);
+        return;
+      }
+      if (methodName !== 'getSignedCertificate') {
+        console.err("Wrong method name " + methodName);
+      }
+      if (args.length < 2) {
+        console.err("Too few args " + args);
+        return;
+      }
 
-// handle starting from the command line or the test harness
-if (process.argv[1] === __filename) {
-  server.listen(config.get('port'), config.get('ip'));
-} else {
-  module.exports = function(cb) {
-    server.listen(config.get('port'), function(err) {
-      cb(err, server.address().port);
+      var email = args[0];
+      if (typeof email !== 'string') {
+        console.err("email is not a string");
+        return;
+      }
+
+      var pubkey = args[1];
+      if (typeof pubkey !== 'string') {
+        console.err("pubkey is not a string");
+        return;
+      }
+
+      var duration = config.get('certificate_validity_ms');
+      if (args.length >= 3 && typeof args[2] == 'number') {
+        duration = args[2];
+      }
+
+      certify({
+        email: email,
+        pubkey: unhtml(pubkey), // unhtml() undoes the effects of XML serialization on JSON.
+        duration: duration,
+        hostname: config.get('issuer_hostname')
+      }, function(err, certificate) {
+        if (err) {
+          console.err("certify() error: ", err);
+          return;
+        }
+
+        var rep = new xmpp.Element('iq', {
+            type: 'result',
+            id: stanza.attrs.id,
+            to: stanza.attrs.from,
+            from: stanza.attrs.to
+          }).
+          c('query', {xmlns: 'jabber:iq:rpc'}).
+            c('methodResponse').
+              c('params').
+                c('param').
+                  c('value').
+                    c('string').t(certificate);
+
+        component.send(rep);
+      });
     });
+
+    pt.write(methodCall.toString());
+    pt.end();
   }
-}
+});
+
+component.on('error', function(e) {
+  console.error(e);
+});

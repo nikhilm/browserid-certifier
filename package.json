@@ -6,11 +6,13 @@
     "compute-cluster": "0.0.7",
     "convict": "0.0.6",
     "cjson": "0.0.6",
-    "express": "2.5.9",
     "jwcrypto": "0.4.3",
     "optimist": "0.3.4",
     "temp": "0.4.0",
-    "winston": "0.5.11"
+    "winston": "0.5.11",
+    "node-xmpp": "0.3.2",
+    "xmlrpc": "1.1.0",
+    "unhtml": "0.1.0"
   },
   "optionalDependencies": {
   },

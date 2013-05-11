@@ -4,19 +4,19 @@
 
     <script src="../js/strophe.min.js" language="javascript" type="text/javascript"></script>
     <script src="../js/strophe.rpc.js" language="javascript" type="text/javascript"></script>
+    <script src="../js/config.js" language="javascript" type="text/javascript"></script>
     <script language="javascript" type="text/javascript">
-      var BOSH_SERVICE = 'https://nikhilism.com/http-bind/';
       var connection = null;
       navigator.id.beginProvisioning(function(jid, certDuration) {
         if (sessionStorage.getItem("jid") !== jid)
           navigator.id.raiseProvisioningFailure("JID not authenticated");
 
         navigator.id.genKeyPair(function(publicKey) {
-          connection = new Strophe.Connection(BOSH_SERVICE);
+          connection = new Strophe.Connection(BrowserID_XMPP_Config.bosh_service);
           connection.attach(
-            sessionStorage.getItem("jid"),
-            sessionStorage.getItem("sid"),
-            parseInt(sessionStorage.getItem("rid")) + 1,
+            sessionStorage.getItem("browserid-xmpp:jid"),
+            sessionStorage.getItem("browserid-xmpp:sid"),
+            parseInt(sessionStorage.getItem("browserid-xmpp:rid")) + 1,
             function(status, error) {
             console.log(status, error);
               if (status == Strophe.Status.CONNECTING) {
@@ -24,7 +24,7 @@
               } else if (status == Strophe.Status.ATTACHED) {
                 console.log("Begin XML-RPC");
                 connection.rpc.addResponseHandler(responseHandler);
-                connection.rpc.sendRequest(parseInt(Math.random()*1000000) + 1, 'persona.nikhilism.com', 'getSignedCertificate', [ connection.jid, publicKey, certDuration ]);
+                connection.rpc.sendRequest(parseInt(Math.random()*1000000) + 1, BrowserID_XMPP_Config.certificate_component_jid, 'getSignedCertificate', [ connection.jid, publicKey, certDuration ]);
               } else {
                 console.log("Failure!", arguments);
               }
@@ -33,13 +33,11 @@
       });
 
       function responseHandler(id, from, result, error) {
-          console.log("RPC response");
         if (error === true) {
           navigator.id.raiseProvisioningFailure("XML-RPC response error");
           return;
         }
 
-        console.log("Response", arguments);
         navigator.id.registerCertificate(result);
       }
     </script>

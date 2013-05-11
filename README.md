@@ -65,7 +65,8 @@ You'll also want to import or re-use this ``key.publickey`` in
 your IdP's ``/.well-known/browserid`` file.
 
     cd ..
-    ./scripts/gen_well_known_browserid.py var/key.publickey > /some/path/www/.well-known/browserid
+    mkdir client/.well-known
+    ./scripts/gen_well_known_browserid.py var/key.publickey > client/.well-known/browserid
 
 Configuring the XMPP Server
 ---------------------------

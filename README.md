@@ -35,6 +35,11 @@ Dependencies
 * C++ compiler
 * make
 
+This program also includes the [strophejs](http://strophe.im/strophejs/)
+library and the
+[strophe.rpc.js](https://github.com/strophe/strophejs-plugins/tree/master/rpc),
+both distributed under the terms of the MIT license.
+
 Installation
 ------------
 

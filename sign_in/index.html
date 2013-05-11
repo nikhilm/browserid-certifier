@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<head>
+    <script src="https://login.persona.org/authentication_api.js" language="javascript" type="text/javascript"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript">
+      navigator.id.beginAuthentication(function(jid) {
+      console.log(sessionStorage.getItem("jid"), jid, "foo");
+        if (sessionStorage.getItem("jid") === jid)
+          navigator.id.completeAuthentication();
+      });
+    </script>
+</head>
+<body>
+    <h1>Login with nikhilism.com</h1>
+    <form action="" id="login-form">
+        <label for="jid">Jabber ID</label><input type="email" name="jid" id="jid-entry" />
+        <label for="password">Password</label><input type="password" name="password" id="password-entry" />
+            <button type="submit" id="submit-button">Login</button>
+    </form>
+    <script src="../js/strophe.min.js" language="javascript" type="text/javascript"></script>
+    <script src="sign_in.js"></script>
+</body>
+</html>

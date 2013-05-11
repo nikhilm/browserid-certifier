@@ -5,29 +5,6 @@ Jabber IDs to be used as identities to authenticate with Mozilla Persona.
 
 A Work In Progress.
 
-XMPP API
---------
-
-The Certifier webservice provides an API over
-[Jabber-RPC](http://xmpp.org/extensions/xep-0009.html).
-
-The XMPP client should send a Jabber-RPC method call after authentication.
-persona-xmpp-client does this by resuming a BOSH session in the provisioning
-page to get a signed certificate on behalf of the authenticated user.
-
-### getSignedCertificate
-
-Arguments (in order):
-
-* email - The email address for this certificate
-* pubkey - Object [compatible with JWT](https://github.com/mozilla/jwcrypto) public keys.
-* duration - How long until the certificate expires, in seconds. (Optional)
-
-The response will be:
-  * certificate - string - A certificate compatible with
-     `navigator.id.registerCertificate` from the [BrowserID Provisioning
-    Protocol](https://developer.mozilla.org/en/BrowserID/Guide_to_Implementing_a_Persona_IdP)
-
 Dependencies
 ------------
 
@@ -96,9 +73,36 @@ Configuring the XMPP Server
 Your XMPP server should support [external
 components](http://xmpp.org/extensions/xep-0114.html). This component has been
 tested with [Prosody](http://prosody.im/doc/components) and
-[ejabberd](https://git.process-one.net/ejabberd/mainline/blobs/raw/v2.1.11/doc/guide.html) (use `ejabberd_service`). The component address should be the `jid` in the configuration file. `browserid.yourdomain.com` is a good name. The config file `password` should be the shared secret.
+[ejabberd](https://git.process-one.net/ejabberd/mainline/blobs/raw/v2.1.11/doc/guide.html)
+(use `ejabberd_service`). The component address should be the `jid` in the
+configuration file. `browserid.yourdomain.com` is a good name. The config file
+`password` should be the shared secret.
 
 Running Certifier
 -----------------
 
     CONFIG_FILES=config/local.json npm start
+
+XMPP API
+--------
+
+The Certifier webservice provides an API over
+[Jabber-RPC](http://xmpp.org/extensions/xep-0009.html).
+
+The XMPP client should send a Jabber-RPC method call after authentication.
+persona-xmpp-client does this by resuming a BOSH session in the provisioning
+page to get a signed certificate on behalf of the authenticated user.
+
+### getSignedCertificate
+
+Arguments (in order):
+
+* email - The email address for this certificate
+* pubkey - Object [compatible with JWT](https://github.com/mozilla/jwcrypto) public keys.
+* duration - How long until the certificate expires, in seconds. (Optional)
+
+The response will be:
+  * certificate - string - A certificate compatible with
+     `navigator.id.registerCertificate` from the [BrowserID Provisioning
+    Protocol](https://developer.mozilla.org/en/BrowserID/Guide_to_Implementing_a_Persona_IdP)
+

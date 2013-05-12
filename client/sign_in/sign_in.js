@@ -8,16 +8,16 @@ var xmppConnect = function(jid, password, callback) {
 $(function() {
   $("#login-form").submit(function() {
     xmppConnect($("#jid-entry").val(), $("#password-entry").val(), function(connection, status, error) {
-      console.log("onConnect ", arguments);
       if (status == Strophe.Status.CONNECTING) {
         console.log("Connecting");
       } else if (status == Strophe.Status.CONNFAIL) {
         console.log('Strophe failed to connect.');
       } else if (status == Strophe.Status.CONNECTED) {
         console.log("Connected! " );
-        sessionStorage.setItem("browserid-xmpp:jid", connection.jid);
+        sessionStorage.setItem("browserid-xmpp:jid", Strophe.getBareJidFromJid(connection.jid));
         sessionStorage.setItem("browserid-xmpp:sid", connection.sid);
         sessionStorage.setItem("browserid-xmpp:rid", connection.rid);
+        console.log("Completing auth");
         navigator.id.completeAuthentication();
       } else if (status == Strophe.Status.ERROR) {
         console.log("Strophe Error ");

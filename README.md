@@ -8,9 +8,18 @@ A Work In Progress.
 Dependencies
 ------------
 
-* gmp.h - on Ubuntu this is the libgmp3-dev package
-* C++ compiler
-* make
+You'll need an XMPP server running on the same domain that hosts the files. The
+XMPP server or a third party component like
+[Punjab](https://github.com/twonds/punjab) should support BOSH.
+
+Your XMPP server should support [external
+components](http://xmpp.org/extensions/xep-0114.html). This component has been
+tested with [Prosody](http://prosody.im/doc/components) and
+[ejabberd](https://git.process-one.net/ejabberd/mainline/blobs/raw/v2.1.11/doc/guide.html)
+(use `ejabberd_service`).
+
+The XMPP component is written in [node](http://nodejs.org). ``npm`` should
+automatically install required dependencies.
 
 This program also includes the [strophejs](http://strophe.im/strophejs/)
 library and the
@@ -20,20 +29,14 @@ both distributed under the terms of the MIT license.
 Installation
 ------------
 
-Either npm or git should work:
-
-    npm install git@github.com:nikhilm/browserid-certifier-xmpp.git
-
-or
-
-    git clone git://github.com/nikhilm/browserid-certifier-xmpp.git
+    git clone git://github.com/nikhilm/browserid-xmpp.git
 
 You must install the dependencies:
 
-    cd browserid-certifier
+    cd browserid-xmpp
     npm install
 
-You must create a config file. Example ``config/local.json``
+Create a config file. Example ``config/local.json``
 
     {
       "jid": "Persona component JID as setup on the XMPP server",
@@ -68,16 +71,38 @@ your IdP's ``/.well-known/browserid`` file.
     mkdir client/.well-known
     ./scripts/gen_well_known_browserid.py var/key.publickey > client/.well-known/browserid
 
+Configuring the client
+----------------------
+
+Your HTTP server will need to serve the files in ``client/``.
+
+``client/.well-known/browserid`` should be served at the top level --
+``https://example.com/.well-known/browserid``. Move it to a different location
+if that makes sense for your setup.
+
+The URL at which ``client/`` is served must match the entries in the
+``browserid`` file. Use [CheckMyIdP](https://checkmyidp.org) to verify that
+everything is working.
+
+Copy ``client/js/config.js-dist`` to ``client/js/config.js``.
+
+Set ``bosh_service`` to the endpoint of your BOSH service. NOTE: Due to Cross
+Origin restrictions, the BOSH service should be accessible on
+``https://example.com`` and not ``https://example.com:5280``. If your website
+is fronted by nginx, the easiest way is to add a location entry:
+
+    location /http-bind/ {
+        proxy_pass  https://example.com:5280/http-bind/;
+        proxy_buffering off;
+        tcp_nodelay on;
+    }
+
 Configuring the XMPP Server
 ---------------------------
 
-Your XMPP server should support [external
-components](http://xmpp.org/extensions/xep-0114.html). This component has been
-tested with [Prosody](http://prosody.im/doc/components) and
-[ejabberd](https://git.process-one.net/ejabberd/mainline/blobs/raw/v2.1.11/doc/guide.html)
-(use `ejabberd_service`). The component address should be the `jid` in the
-configuration file. `browserid.yourdomain.com` is a good name. The config file
-`password` should be the shared secret.
+The component address should be the `jid` in the configuration file.
+`browserid.yourdomain.com` is a good name. The config file `password` should be
+the shared secret.
 
 Running Certifier
 -----------------
@@ -87,7 +112,7 @@ Running Certifier
 XMPP API
 --------
 
-The Certifier webservice provides an API over
+The Certifier component provides an API over
 [Jabber-RPC](http://xmpp.org/extensions/xep-0009.html).
 
 The XMPP client should send a Jabber-RPC method call after authentication.

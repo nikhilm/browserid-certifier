@@ -48,8 +48,8 @@ Create a config file. Example ``config/local.json``
       "priv_key_path": "var/key.secretkey"
     }
 
-Generating the Keypar
----------------------
+Generating the Keypair
+----------------------
 
 Both your IdP service and the Certifier must share a public key.
 The Certifier, requires both a private and public keypair.
